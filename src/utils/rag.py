@@ -27,10 +27,8 @@ vectorstore = FAISS.from_documents(docs, embeddings)
 retriever = vectorstore.as_retriever()
 
 # Invoke the retriever
-query = "What is the module code of this course?"
 
 chat = ChatGoogleGenerativeAI(model="models/gemini-1.0-pro-latest", google_api_key=os.environ.get("GOOGLE_API_KEY"))
-question = "What is module code of this course?"
 
 SYSTEM_TEMPLATE = """Answer the user's questions based on the below context.
  
@@ -58,23 +56,18 @@ question_answering_prompt = ChatPromptTemplate.from_messages(
 
 document_chain = create_stuff_documents_chain(chat, question_answering_prompt)
 
-res = document_chain.invoke(
-    {
-        "context": docs,
-        "messages": [
-            HumanMessage(content=question)
-        ],
-    }
-)
-
 
 def get_answer(question: str):
     """
     Get the answer to a question
     """
+    context = retriever.invoke(question, top_k=4)
+    print(len(context))
+    print(context[0])
+
     answer = document_chain.invoke(
         {
-            "context": docs,
+            "context": context,
             "messages": [
                 HumanMessage(content=question)
             ],
