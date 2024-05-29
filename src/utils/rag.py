@@ -1,8 +1,10 @@
 from langchain.chains.combine_documents import create_stuff_documents_chain
+from langchain.memory import ChatMessageHistory
 from langchain_community.document_loaders import DirectoryLoader
 from langchain_community.vectorstores import FAISS
 from langchain_core.messages import HumanMessage
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+from langchain_core.runnables.history import RunnableWithMessageHistory
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_google_genai import GoogleGenerativeAIEmbeddings, ChatGoogleGenerativeAI
 from dotenv import load_dotenv
@@ -12,6 +14,7 @@ load_dotenv()
 
 # Load documents
 path = os.environ.get('DOCS_PATH')
+print(path)
 loader = DirectoryLoader(path, glob="**/*.md")
 docs = loader.load()
 
@@ -30,15 +33,13 @@ retriever = vectorstore.as_retriever()
 
 chat = ChatGoogleGenerativeAI(model="models/gemini-1.0-pro-latest", google_api_key=os.environ.get("GOOGLE_API_KEY"))
 
-SYSTEM_TEMPLATE = """Answer the user's questions based on the below context.
- 
-If the context doesn't contain any relevant information to the question, don't make something up and just say "I don't know".
+SYSTEM_TEMPLATE = """
+You are a helpful assistant. 
+Answer all questions to the best of your ability based on the below context or your knowledge.
 If the question is not clear, ask for clarification.
 If the question is a general greeting, answer with a general greeting.
-If the question is about code, answer with sample code.
-
+If the question is about code, answer with sample code or give better version if needed.
 Returns friendly and detailed answers with markdown format.
-
 <context>
 {context}
 </context>
@@ -47,30 +48,39 @@ Returns friendly and detailed answers with markdown format.
 question_answering_prompt = ChatPromptTemplate.from_messages(
     [
         (
-            "human",
+            "user",
             SYSTEM_TEMPLATE,
         ),
-        MessagesPlaceholder(variable_name="messages"),
+        MessagesPlaceholder(variable_name="chat_history"),
+        ("human", "{input}"),
     ]
 )
 
-document_chain = create_stuff_documents_chain(chat, question_answering_prompt)
+chain = create_stuff_documents_chain(chat, question_answering_prompt)
+
+demo_ephemeral_chat_history_for_chain = ChatMessageHistory()
+
+chain_with_message_history = RunnableWithMessageHistory(
+    chain,
+    lambda session_id: demo_ephemeral_chat_history_for_chain,
+    input_messages_key="input",
+    history_messages_key="chat_history",
+)
 
 
 def get_answer(question: str):
     """
     Get the answer to a question
     """
-    context = retriever.invoke(question, top_k=4)
-    print(len(context))
-    print(context[0])
+    context = retriever.invoke(question, top_k=3)
 
-    answer = document_chain.invoke(
+    answer = (chain_with_message_history
+    .invoke(
         {
             "context": context,
-            "messages": [
-                HumanMessage(content=question)
-            ],
-        }
-    )
+            "input": HumanMessage(question),
+        },
+        {"configurable": {"session_id": "unused"}}
+    ))
     return answer
+

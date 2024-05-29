@@ -1,8 +1,10 @@
-import subprocess
-
-# Run pip freeze command
-result = subprocess.run(['pip', 'freeze'], stdout=subprocess.PIPE)
-
-# Decode the output and write it to a file
-with open('requirements.txt', 'w') as f:
-    f.write(result.stdout.decode('utf-8'))
+# import random
+#
+#
+# questions = [
+#     'my name is Vinh',
+#     'what is my name'
+# ]
+#
+# for q in questions:
+#     print(get_answer(q))
