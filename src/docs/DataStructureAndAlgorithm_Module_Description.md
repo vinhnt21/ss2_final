@@ -64,14 +64,14 @@ Upon completion of this module, students should be able to:
 
 --- 
 
-#### Assessments
+#### 
 
 | Type       | Name       | Weight                                                  | Description                                   | Linked Objectives |
 |------------|------------|---------------------------------------------------------|-----------------------------------------------|-------------------|
 | Internal   | Attendance | 10%                                                     | Students must attend at least 80% of classes. | -                 |
 | Discussion | 20%        | Tasks assigned during class that students must present. | 3.3, 3.4, 3.5                                 |
 | Midterm    | 20%        | Paper-based exam.                                       | 3.1, 3.2, 3.3                                 |
-| Final      | 50%        | Paper-based exam.                                       | 3.1, 3.2, 3.3, 3.5                            |
+| Final      | 50%    Assessments    | Paper-based exam.                                       | 3.1, 3.2, 3.3, 3.5                            |
 
 ---
 
